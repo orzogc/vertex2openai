@@ -5,6 +5,11 @@ from credentials_manager import CredentialManager, parse_multiple_json_credentia
 import config as app_config
 from model_loader import refresh_models_config_cache # Import new model loader function
 
+import socks
+import socket
+from urllib.parse import urlparse
+from app.config import ALL_PROXY
+
 # VERTEX_EXPRESS_MODELS list is now dynamically loaded via model_loader
 # The constant VERTEX_EXPRESS_MODELS previously defined here is removed.
 # Consumers should use get_vertex_express_models() from model_loader.
@@ -20,6 +25,34 @@ async def init_vertex_ai(credential_manager_instance: CredentialManager) -> bool
 
     Returns True if any credentials seem available in the manager, False otherwise.
     """
+    if ALL_PROXY:
+        print(f"INFO: ALL_PROXY set to {ALL_PROXY}. Attempting to configure SOCKS5 proxy.")
+        try:
+            parsed_url = urlparse(ALL_PROXY)
+            if parsed_url.scheme not in ["socks5", "socks5h"]:
+                print(f"WARNING: Invalid scheme {parsed_url.scheme} for ALL_PROXY. Expected 'socks5' or 'socks5h'. Proxy not configured.")
+            else:
+                username = parsed_url.username
+                password = parsed_url.password
+                hostname = parsed_url.hostname
+                port = parsed_url.port
+
+                if not hostname or not port:
+                    print(f"WARNING: Invalid SOCKS5 proxy URL: {ALL_PROXY}. Hostname or port missing. Proxy not configured.")
+                else:
+                    socks.set_default_proxy(
+                        socks.SOCKS5,
+                        addr=hostname,
+                        port=port,
+                        username=username,
+                        password=password,
+                        rdns=True if parsed_url.scheme == "socks5h" else False # Use rdns=True for socks5h
+                    )
+                    socket.socket = socks.socksocket
+                    print(f"INFO: SOCKS5 proxy configured via {parsed_url.scheme}://{hostname}:{port} (username/password {'set' if username else 'not set'}).")
+        except Exception as e:
+            print(f"WARNING: Failed to parse or set SOCKS5 proxy from ALL_PROXY: {e}. Proxy not configured.")
+
     try:
         credentials_json_str = app_config.GOOGLE_CREDENTIALS_JSON_STR
         env_creds_loaded_into_manager = False

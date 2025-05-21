@@ -26,4 +26,9 @@ FAKE_STREAMING_INTERVAL_SECONDS = float(os.environ.get("FAKE_STREAMING_INTERVAL"
 # URL for the remote JSON file containing model lists
 MODELS_CONFIG_URL = os.environ.get("MODELS_CONFIG_URL", "https://gist.githubusercontent.com/gzzhongqi/e0b684f319437a859bcf5bd6203fd1f6/raw")
 
+# Proxy settings
+HTTP_PROXY = os.environ.get("HTTP_PROXY")
+HTTPS_PROXY = os.environ.get("HTTPS_PROXY")
+ALL_PROXY = os.environ.get("ALL_PROXY")
+
 # Validation logic moved to app/auth.py

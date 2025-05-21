@@ -7,3 +7,5 @@ google-genai==1.13.0
 httpx>=0.25.0
 openai
 google-auth-oauthlib
+PySocks
+requests

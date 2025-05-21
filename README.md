@@ -140,6 +140,35 @@ These are sourced by `app/config.py`:
 -   `FAKE_STREAMING`: Set to `"true"` to enable simulated streaming for non-streaming models (for testing). (Default: `"false"`)
 -   `FAKE_STREAMING_INTERVAL`: Interval in seconds for sending keep-alive messages during fake streaming. (Default: `1.0`)
 
+## Proxy Configuration
+
+The application supports routing its outbound traffic through HTTP, HTTPS, and SOCKS5 proxies. This is configured using standard environment variables.
+
+### Supported Proxies and Environment Variables
+
+-   **HTTP Proxy**:
+    -   Environment Variable: `HTTP_PROXY`
+    -   Usage: For HTTP traffic.
+    -   Example URL: `http://proxy.example.com:8080` or `http://user:pass@proxy.example.com:8080`
+-   **HTTPS Proxy**:
+    -   Environment Variable: `HTTPS_PROXY`
+    -   Usage: For HTTPS traffic. Note that the proxy URL itself can be HTTP or HTTPS.
+    -   Example URL: `http://proxy.example.com:8080` or `https://secureproxy.example.com:8888`
+-   **SOCKS5 Proxy**:
+    -   Environment Variable: `ALL_PROXY`
+    -   Usage: For SOCKS5 traffic. If `ALL_PROXY` is set to a SOCKS5 URL, it will be used for TCP connections made by the application, taking precedence over `HTTP_PROXY`/`HTTPS_PROXY` for services that respect SOCKS proxies at a lower level.
+    -   Example URL:
+        -   `socks5://user:pass@host:port` (e.g., `socks5://myuser:mypass@socksproxy.example.com:1080`)
+        -   `socks5h://user:pass@host:port` (e.g., `socks5h://myuser:mypass@socksproxy.example.com:1080`) - The `h` in `socks5h` indicates that DNS resolution should also be performed by the proxy (client-side DNS resolution through the proxy).
+
+### How Proxies Are Used
+
+-   **`HTTP_PROXY` and `HTTPS_PROXY`**: These variables are standard and typically handled automatically by the underlying HTTP client libraries used by the application (e.g., `requests`, which is a dependency of `google-auth`). When these variables are set, HTTP and HTTPS requests made by these libraries will be routed through the specified proxies.
+
+-   **`ALL_PROXY` (for SOCKS5)**: When `ALL_PROXY` is set to a `socks5://` or `socks5h://` URL, the application configures the `PySocks` library to route all TCP socket connections through the specified SOCKS5 proxy. This is a more comprehensive proxy method that works at a lower network level. If `ALL_PROXY` is set to a SOCKS URL, it generally overrides `HTTP_PROXY` and `HTTPS_PROXY` for connections that can be routed via SOCKS.
+
+**Note**: Ensure that the proxy server addresses and ports are accessible from the environment where the adapter service is running (e.g., your local machine, Docker container, or Hugging Face Space).
+
 ## License
 
 This project is licensed under the MIT License.
